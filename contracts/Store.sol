@@ -1,6 +1,8 @@
 pragma solidity ^0.5.0;
 
 contract Store {
+    event boughtEvent(uint indexed _productId);
+
     struct Product {
         uint id;
         string name;
@@ -30,6 +32,8 @@ contract Store {
 
         buyers[msg.sender] = products[_productId];
         products[_productId].stock --;
+
+        emit boughtEvent(_productId);
 
 
     }

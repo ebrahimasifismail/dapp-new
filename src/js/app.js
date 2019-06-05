@@ -48,9 +48,32 @@ App = {
   initContract: function() {
     $.getJSON("Store.json", function(store){
       App.contracts.Store = TruffleContract(store);
-
       App.contracts.Store.setProvider(App.web3Provider);
-      return App.render();
+      App.contracts.Store.deployed().then(function(store){
+        console.log("Store Contract Address: ", store.address);
+      });
+      
+    }).done(function(){
+      $.getJSON("IceToken.json", function(iceToken){
+        App.contracts.IceToken = TruffleContract(iceToken);
+        App.contracts.IceToken.setProvider(App.web3Provider);
+        App.contracts.IceToken.deployed().then(function(iceToken){
+          console.log("Ice Token Address: ", iceToken.address);
+        });
+        App.listenForEvents();
+        return App.render();
+      })
+    })
+  },
+  getToken: function() {
+    toSent = $('#numberOfTokens').val();
+    App.contracts.IceToken.deployed().then(function(instance){
+      IceTokenInstance = instance;
+
+      return IceTokenInstance.transfer(App.account, toSent)
+
+    }).then(function(i){
+      console.log(i.receipt)
     })
   },
   render: function() {
@@ -105,12 +128,44 @@ App = {
   castVote: function() {
     var productId = $('#candidatesSelect').val();
     App.contracts.Store.deployed().then(function(instance){
+      return instance.products(productId)
+    }).then(function(price){
+      var amount = price[2]["c"][0]
+      App.contracts.IceToken.deployed().then(function(instance){
+        IceTokenInstance = instance
+        return instance.balanceOf(App.account)
+      }).then(function(balance){
+        if(balance["c"][0] > amount){
+          IceTokenInstance.transfer("0x4f4bBe3994479DA5375f806465A3A3475f6753AD", amount)
+        }
+        else{
+          alert("No Sufficient ICE balance");
+        }
+      })
+    })
+
+    
+    App.contracts.Store.deployed().then(function(instance){
       return instance.buy(productId, {from: App.account})
+    }).then(function(result){
+      App.contracts
     }).then(function(result){
       $("#content").hide();
       $("#loader").show();
     }).catch(function(err){
       console.error(err);
+    });
+  },
+  listenForEvents: function() {
+    App.contracts.Store.deployed().then(function(instance) {
+      instance.boughtEvent({}, {
+        fromBlock: 0,
+        toBlock: 'latest'
+      }).watch(function(error, event) {
+        console.log("event triggered", event)
+        // Reload when a new vote is recorded
+        App.render();
+      });
     });
   }
 

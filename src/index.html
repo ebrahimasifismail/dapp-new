@@ -16,6 +16,12 @@
           <h1 class="text-center">Simple Store</h1>
           <hr/>
           <br/>
+          <div>
+            <form onSubmit="App.getToken(); return false;">
+              <input id="numberOfTokens" class="form-control input-lg" type="number" name="number" value="1" min="1" pattern="[0-9]">
+              <button style="margin-top:"class="btn btn-primary"type="submit" id="buyToken">Buy Token</button>
+            </form>
+          </div>
           <div id="loader">
             <p class="text-center">Loading...</p>
           </div>
@@ -55,5 +61,7 @@
     <script src="js/web3.min.js"></script>
     <script src="js/truffle-contract.js"></script>
     <script src="js/app.js"></script>
+    <script>
+    </script>
   </body>
 </html>
